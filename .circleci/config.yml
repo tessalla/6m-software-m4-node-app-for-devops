@@ -62,8 +62,7 @@ jobs:
       # Without this, we have manually run "docker login"
       - run:
           name: Docker Login
-          command: |
-            echo $DOCKER_PASSWORD | docker login -u $DOCKER_LOGIN --password-stdin
+          command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_LOGIN --password-stdin
       - docker/build:
           image: tessalla/test-repository
           # tag with current git revision (commit hash) and latest tag
