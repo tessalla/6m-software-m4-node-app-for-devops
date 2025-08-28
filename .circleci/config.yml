@@ -60,7 +60,9 @@ jobs:
       # 3. Sets up Docker Client for operation
       # Ensure that DOCKER_LOGIN and DOCKER_PASSWORD in CircleCI Project Settings
       # Without this, we have manually run "docker login"
-      - docker/check
+      - docker/check:
+          docker-username: DOCKER_LOGIN
+          docker-password: DOCKER_PASSWORD
       - docker/build:
           image: tessalla/test-repository
           # tag with current git revision (commit hash) and latest tag
