@@ -63,8 +63,11 @@ jobs:
       - docker/check
       - docker/build:
           image: tessalla/test-repository
+          # tag with current git revision (commit hash) and latest tag
+          tag: << pipeline.git.revision >>, latest
       - docker/push:
           image: tessalla/test-repository
+          tag: << pipeline.git.revision >>, latest
 
 # Define the workflow for job execution order
 workflows:
