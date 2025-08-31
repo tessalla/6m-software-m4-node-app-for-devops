@@ -7,6 +7,14 @@ orbs:
 # Each job has 2 parts - 1. Executor, 2. Steps
 jobs:
   build:
+    docker:
+      - image: cimg/node:16.10
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+          
+  build-and-push:
    # executor: # long form executor
    #   name: docker
    #   docker:
@@ -17,10 +25,17 @@ jobs:
       - image: cimg/node:16.10
     steps:
       - checkout
-      # Using node/install-packages is better then npm install
-      # because it gives you CircleCI optimization (caching, lockfile, concise)
-      - node/install-packages:
-          pkg-manager: npm
+      - setup_remote_docker
+      - docker/check:
+          docker-username: DOCKERHUB_USERNAME
+          docker-password: DOCKERHUB_PASSWORD
+      - docker/build:
+          image: tessalla/education-space
+          tag: << pipeline.git.revision >>
+      - docker/push:
+          image: tessalla/education-space
+          tag: << pipeline.git.revision >>
+
   # without orbs, we have to run everything manually using run
   #    - run: |
   #    echo "Installing dependencies"
@@ -51,10 +66,13 @@ jobs:
 workflows:
   simple_workflow:
     jobs:
-      - build # run build job first
+      - build
       - lint: # run lint job
           requires:
             - build
       - test: # run test job after build
           requires:
             - build # test depends on build
+      - build-and-push:
+          requires:
+            - test 
