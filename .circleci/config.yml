@@ -1,88 +1,41 @@
-# This file tells CircleCI what to do
+# this file tells CircleCI what to do
 version: 2.1
 orbs:
   node: circleci/node@5.0.1
   docker: circleci/docker@2.1.4
 
-# commands - resuable sets of steps
-commands:
-  install_deps:
-    steps:
-      - checkout
-      - node/install-packages:
-          pkg-manager: npm
-
 # Each job has 2 parts - 1. Executor, 2. Steps
 jobs:
   build:
-    # executor:
-    #   name: docker
-    #   docker:
-    #     - image: cimg/node:16.10
-    # Means spin up a container using node:16.10 and run the steps
-    # Shorthand for the executor
+    # Means spin up a container using node: 16.10 and run the steps
     docker:
       - image: cimg/node:16.10
     steps:
       - checkout
-      # Using node/install-packages is better than npm install
+      # Using node/install-packages is better then npm install
       # because it gives you CircleCI optimization (caching, lockfile, concise)
       - node/install-packages:
           pkg-manager: npm
-      # Without orbs, we have to run everything manually using run
-      # - run: |
-      #     echo "Installing dependencies"
-      #     npm install
-  lint:
-    docker:
-      - image: cimg/node:20.12
-    steps:
-      - install_deps
-      - run: |
-          echo "Running lint..."
-          npm run lint
+  # without orbs, we have to run everything manually using run
+  #    - run: |
+  #    echo "Installing dependencies"
+  #    npm install
   test:
     docker:
       - image: cimg/node:16.10
     steps:
-      - install_deps
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
       - run: |
           echo "Running tests..."
           npm run test
-  publish:
-    executor: docker/docker
-    steps:
-      - setup_remote_docker
-      - checkout
-      # docker/check does 3 things
-      # 1. Verifies Docker is working
-      # 2. Authenticates with Docker Hub using your credentials
-      # 3. Sets up Docker Client for operation
-      # Ensure that DOCKER_LOGIN and DOCKER_PASSWORD in CircleCI Project Settings
-      # Without this, we have manually run "docker login"
-      - run:
-          name: Docker Login
-          command: echo $DOCKER_PASSWORD | docker login -u $DOCKER_LOGIN --password-stdin
-      - docker/build:
-          image: tessalla/test-repository
-          # tag with current git revision (commit hash) and latest tag
-          tag: << pipeline.git.revision >>, latest
-      - docker/push:
-          image: tessalla/test-repository
-          tag: << pipeline.git.revision >>, latest
 
-# Define the workflow for job execution order
+# define the workflow for job execution order
 workflows:
   simple_workflow:
     jobs:
-      - build # Run build job first
-      - lint: # Run lint job after build
+      - build
+      - test:
           requires:
             - build
-      - test: # Run test job after build
-          requires:
-            - build # test depends on build
-      - publish:
-          requires:
-            - test
-            - lint
