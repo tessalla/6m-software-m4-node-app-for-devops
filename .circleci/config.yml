@@ -26,9 +26,9 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run :
+      - run:
           name: Docker Login
-          command: echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+          command: echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
       - docker/build:
           image: tessalla/education-space
           tag: << pipeline.git.revision >>
@@ -42,7 +42,7 @@ jobs:
   #    npm install
   lint:
     docker:
-      - image: cimg/node:20.12
+      - image: cimg/node:16.10
     steps:
       - checkout
       - node/install-packages:
