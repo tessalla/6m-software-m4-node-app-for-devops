@@ -27,6 +27,9 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
+          name: Debug DockerHub Username
+          command: echo "DOCKERHUB_USERNAME is [$DOCKERHUB_USERNAME]"
+      - run:
           name: Docker Login
           command: echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
       - docker/build:
