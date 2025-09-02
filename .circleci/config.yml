@@ -3,6 +3,7 @@ version: 2.1
 orbs:
   node: circleci/node@5.0.1
   docker: circleci/docker@2.1.4
+  snyk: snyk/snyk@1.5.0
 
 # Each job has 2 parts - 1. Executor, 2. Steps
 jobs:
@@ -13,6 +14,19 @@ jobs:
       - checkout
       - node/install-packages:
           pkg-manager: npm
+
+  scan:
+    docker:
+      - image: cimg/node:16.10
+    environment:
+      IMAGE_NAME: tessalla/education-space
+    steps:
+        - checkout
+        - setup_remote_docker      
+        - docker/check
+        - run: docker build -t cimg/node:16.10 .
+        - snyk/scan: 
+            docker-image-name: cimg/node:16.10
 
   build-and-push:
    # executor: # long form executor
@@ -78,4 +92,10 @@ workflows:
             - build # test depends on build
       - build-and-push:
           requires:
-            - test 
+            - test
+      - scan:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
