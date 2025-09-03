@@ -27,7 +27,7 @@ jobs:
     docker:
       - image: cimg/node:16.10
     environment:
-      IMAGE_NAME: tessalla/education-space
+      IMAGE_NAME: tessalla/test-repository
     steps:
         - checkout
         - setup_remote_docker      
@@ -55,10 +55,10 @@ jobs:
           name: Docker Login
           command: echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
       - docker/build:
-          image: tessalla/education-space
+          image: tessalla/test-repository
           tag: << pipeline.git.revision >>
       - docker/push:
-          image: tessalla/education-space
+          image: tessalla/test-repository
           tag: << pipeline.git.revision >>
 
   # without orbs, we have to run everything manually using run
@@ -83,6 +83,34 @@ jobs:
       - run: |
           echo "Running tests..."
           npm run test
+  publish:
+    executor: docker/docker
+    steps:
+      - setup_remote_docker
+      - checkout
+      # docker/check does 3 things
+      # 1. Verifies Docker is working
+      # 2. Authenticates with Docker Hub using your credentials
+      # 3. Sets up Docker client for operations
+      # Ensure that DOCKER_LOGIN and DOCKER_PASSWORD in CircleCI Project Settings
+      # Without this, we have manually run "docker login"
+      - docker/check
+      # Using Docker Orb to build and push image
+      - docker/build:
+          image: tessalla/test-repository
+          # tag with current git revision (commit hash) and latest tag
+          tag: << pipeline.git.revision >>
+      - docker/push:
+          image: tessalla/test-repository
+          tag: << pipeline.git.revision >>
+
+      - docker/build:
+          image: tessalla/test-repository
+          tag: revision
+      - docker/push:
+          image: tessalla/test-repository
+          tag: revision
+
 
 # define the workflow for job execution order
 workflows:
@@ -98,9 +126,19 @@ workflows:
       - build-and-push:
           requires:
             - test
+          filters:
+            branches:
+              only: revision
       - scan:
           requires:
             - build
           filters:
             branches:
-              only: main
+              only: revision
+      - publish:
+          requires:
+              - test
+              - lint
+          filters:
+            branches:
+              only: revision
