@@ -56,10 +56,10 @@ jobs:
           command: echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
       - docker/build:
           image: tessalla/test-repository
-          tag: << pipeline.git.revision >>
+          tag: << pipeline.git.revision >>,latest
       - docker/push:
           image: tessalla/test-repository
-          tag: << pipeline.git.revision >>
+          tag: << pipeline.git.revision >>,latest
 
   # without orbs, we have to run everything manually using run
   #    - run: |
