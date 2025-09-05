@@ -114,31 +114,55 @@ jobs:
 
 # define the workflow for job execution order
 workflows:
-  simple_workflow:
+  main_workflow:
     jobs:
-      - build
-      - lint: # run lint job
-          requires:
-            - build
-      - test: # run test job after build
-          requires:
-            - build # test depends on build
-      - build-and-push:
-          requires:
-            - test
+      - build:
           filters:
             branches:
-              only: revision
+              only: main
+
+      - test:
+          requires:
+            - build
+          filters:
+            branches:
+              only: main
+
+  release_Workflow:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only: release
+      - lint:
+          requires:
+            - build
+          filters:
+            branches:
+              only: release
+      - test:
+          requires:
+            - build
+          filters:
+            branches:
+              only: release
       - scan:
           requires:
             - build
           filters:
             branches:
-              only: revision
-      - publish:
+              only: release
+      - build-and-push:
           requires:
-              - test
-              - lint
+            - test
           filters:
             branches:
-              only: revision
+              only: release
+      - publish:
+          requires:
+            - test
+            - lint
+          filters:
+            branches:
+              only: release
+           
